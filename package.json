@@ -9,6 +9,7 @@
   "sideEffects": false,
   "scripts": {
     "dev": "parcel demo/index.html -d .devserver --no-cache",
+    "prepare": "npm run build",
     "build": "rollup --config",
     "test": "jest --coverage",
     "lint": "eslint \"{src,test}/**/*.js\"",
