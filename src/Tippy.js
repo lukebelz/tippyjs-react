@@ -213,14 +213,16 @@ export default function TippyGenerator(tippy) {
       <>
         {children
           ? cloneElement(children, {
-              ref: node => {
+              ref: function(node) {
                 mutableBox.ref = node;
-                if (
-                  children &&
-                  typeof children === 'object' &&
-                  'ref' in children
-                ) {
-                  mergeRef(children.ref, node);
+                if (children && typeof children === 'object') {
+                  var refDescriptor = Object.getOwnPropertyDescriptor(
+                    children,
+                    'ref',
+                  );
+                  if (refDescriptor && refDescriptor.value != null) {
+                    mergeRef(refDescriptor.value, node);
+                  }
                 }
               },
             })
