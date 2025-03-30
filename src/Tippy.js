@@ -1,13 +1,25 @@
-import React, {cloneElement, useState} from 'react';
-import {createPortal} from 'react-dom';
+import React, { cloneElement, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   preserveRef,
   ssrSafeCreateDiv,
   toDataAttributes,
   deepPreserveProps,
 } from './utils';
-import {useMutableBox, useIsomorphicLayoutEffect} from './util-hooks';
-import {classNamePlugin} from './className-plugin';
+import { useMutableBox, useIsomorphicLayoutEffect } from './util-hooks';
+import { classNamePlugin } from './className-plugin';
+
+/**
+ * @param {any} childRef
+ * @param {HTMLElement|null} node
+ */
+function mergeRef(childRef, node) {
+  if (typeof childRef === 'function') {
+    childRef(node);
+  } else if (childRef != null) {
+    childRef.current = node;
+  }
+}
 
 export default function TippyGenerator(tippy) {
   function Tippy({
@@ -51,12 +63,11 @@ export default function TippyGenerator(tippy) {
               [
                 `@tippyjs/react: Cannot specify \`${nativeStateProp}\` prop in`,
                 `controlled mode (\`visible\` prop)`,
-              ].join(' '),
+              ].join(' ')
             );
           }
         });
       }
-
       props.trigger = 'manual';
       props.hideOnClick = false;
     }
@@ -80,11 +91,10 @@ export default function TippyGenerator(tippy) {
                     return {
                       onTrigger(instance, event) {
                         const node = singleton.data.children.find(
-                          ({instance}) =>
-                            instance.reference === event.currentTarget,
+                          ({ instance }) =>
+                            instance.reference === event.currentTarget
                         );
-                        instance.state.$$activeSingletonInstance =
-                          node.instance;
+                        instance.state.$$activeSingletonInstance = node.instance;
                         setSingletonContent(node.content);
                       },
                     };
@@ -92,7 +102,7 @@ export default function TippyGenerator(tippy) {
                 },
               ]
             : plugins,
-        render: () => ({popper: mutableBox.container}),
+        render: () => ({ popper: mutableBox.container }),
       };
     }
 
@@ -104,22 +114,20 @@ export default function TippyGenerator(tippy) {
       if (reference && reference.hasOwnProperty('current')) {
         element = reference.current;
       }
-
-      const instance = tippy(element || mutableBox.ref || ssrSafeCreateDiv(), {
-        ...computedProps,
-        plugins: [classNamePlugin, ...(props.plugins || [])],
-      });
-
+      const instance = tippy(
+        element || mutableBox.ref || ssrSafeCreateDiv(),
+        {
+          ...computedProps,
+          plugins: [classNamePlugin, ...(props.plugins || [])],
+        }
+      );
       mutableBox.instance = instance;
-
       if (disabled) {
         instance.disable();
       }
-
       if (visible) {
         instance.show();
       }
-
       if (isSingletonMode) {
         singleton.hook({
           instance,
@@ -128,9 +136,7 @@ export default function TippyGenerator(tippy) {
           setSingletonContent,
         });
       }
-
       setMounted(true);
-
       return () => {
         instance.destroy();
         singleton?.cleanup(instance);
@@ -144,20 +150,15 @@ export default function TippyGenerator(tippy) {
         mutableBox.renders++;
         return;
       }
-
-      const {instance} = mutableBox;
-
+      const { instance } = mutableBox;
       instance.setProps(deepPreserveProps(instance.props, computedProps));
-
       // Fixes #264
       instance.popperInstance?.forceUpdate();
-
       if (disabled) {
         instance.disable();
       } else {
         instance.enable();
       }
-
       if (isControlledMode) {
         if (visible) {
           instance.show();
@@ -165,7 +166,6 @@ export default function TippyGenerator(tippy) {
           instance.hide();
         }
       }
-
       if (isSingletonMode) {
         singleton.hook({
           instance,
@@ -180,24 +180,21 @@ export default function TippyGenerator(tippy) {
       if (!render) {
         return;
       }
-
-      const {instance} = mutableBox;
-
+      const { instance } = mutableBox;
       instance.setProps({
         popperOptions: {
           ...instance.props.popperOptions,
           modifiers: [
             ...(instance.props.popperOptions?.modifiers || []).filter(
-              ({name}) => name !== '$$tippyReact',
+              ({ name }) => name !== '$$tippyReact'
             ),
             {
               name: '$$tippyReact',
               enabled: true,
               phase: 'beforeWrite',
               requires: ['computeStyles'],
-              fn({state}) {
+              fn({ state }) {
                 const hideData = state.modifiersData?.hide;
-
                 // WARNING: this is a high-risk path that can cause an infinite
                 // loop. This expression _must_ evaluate to false when required
                 if (
@@ -211,7 +208,6 @@ export default function TippyGenerator(tippy) {
                     escaped: hideData?.hasPopperEscaped,
                   });
                 }
-
                 state.attributes.popper = {};
               },
             },
@@ -224,9 +220,11 @@ export default function TippyGenerator(tippy) {
       <>
         {children
           ? cloneElement(children, {
-              ref(node) {
-                mutableBox.ref = node;
-                preserveRef(children.ref, node);
+              ref: (node) => {
+                mutableBox.ref = node
+                if (children && typeof children === 'object' && 'ref' in children) {
+                  mergeRef(children.ref, node)
+                }
               },
             })
           : null}
@@ -236,14 +234,13 @@ export default function TippyGenerator(tippy) {
               ? render(
                   toDataAttributes(attrs),
                   singletonContent,
-                  mutableBox.instance,
+                  mutableBox.instance
                 )
               : content,
-            mutableBox.container,
+            mutableBox.container
           )}
       </>
     );
   }
-
   return Tippy;
 }
