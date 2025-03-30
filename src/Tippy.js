@@ -1,13 +1,8 @@
-import React, { cloneElement, useState } from 'react';
-import { createPortal } from 'react-dom';
-import {
-  preserveRef,
-  ssrSafeCreateDiv,
-  toDataAttributes,
-  deepPreserveProps,
-} from './utils';
-import { useMutableBox, useIsomorphicLayoutEffect } from './util-hooks';
-import { classNamePlugin } from './className-plugin';
+import React, {cloneElement, useState} from 'react';
+import {createPortal} from 'react-dom';
+import {ssrSafeCreateDiv, toDataAttributes, deepPreserveProps} from './utils';
+import {useMutableBox, useIsomorphicLayoutEffect} from './util-hooks';
+import {classNamePlugin} from './className-plugin';
 
 /**
  * @param {any} childRef
@@ -63,7 +58,7 @@ export default function TippyGenerator(tippy) {
               [
                 `@tippyjs/react: Cannot specify \`${nativeStateProp}\` prop in`,
                 `controlled mode (\`visible\` prop)`,
-              ].join(' ')
+              ].join(' '),
             );
           }
         });
@@ -91,10 +86,11 @@ export default function TippyGenerator(tippy) {
                     return {
                       onTrigger(instance, event) {
                         const node = singleton.data.children.find(
-                          ({ instance }) =>
-                            instance.reference === event.currentTarget
+                          ({instance}) =>
+                            instance.reference === event.currentTarget,
                         );
-                        instance.state.$$activeSingletonInstance = node.instance;
+                        instance.state.$$activeSingletonInstance =
+                          node.instance;
                         setSingletonContent(node.content);
                       },
                     };
@@ -102,7 +98,7 @@ export default function TippyGenerator(tippy) {
                 },
               ]
             : plugins,
-        render: () => ({ popper: mutableBox.container }),
+        render: () => ({popper: mutableBox.container}),
       };
     }
 
@@ -114,13 +110,10 @@ export default function TippyGenerator(tippy) {
       if (reference && reference.hasOwnProperty('current')) {
         element = reference.current;
       }
-      const instance = tippy(
-        element || mutableBox.ref || ssrSafeCreateDiv(),
-        {
-          ...computedProps,
-          plugins: [classNamePlugin, ...(props.plugins || [])],
-        }
-      );
+      const instance = tippy(element || mutableBox.ref || ssrSafeCreateDiv(), {
+        ...computedProps,
+        plugins: [classNamePlugin, ...(props.plugins || [])],
+      });
       mutableBox.instance = instance;
       if (disabled) {
         instance.disable();
@@ -150,7 +143,7 @@ export default function TippyGenerator(tippy) {
         mutableBox.renders++;
         return;
       }
-      const { instance } = mutableBox;
+      const {instance} = mutableBox;
       instance.setProps(deepPreserveProps(instance.props, computedProps));
       // Fixes #264
       instance.popperInstance?.forceUpdate();
@@ -180,20 +173,20 @@ export default function TippyGenerator(tippy) {
       if (!render) {
         return;
       }
-      const { instance } = mutableBox;
+      const {instance} = mutableBox;
       instance.setProps({
         popperOptions: {
           ...instance.props.popperOptions,
           modifiers: [
             ...(instance.props.popperOptions?.modifiers || []).filter(
-              ({ name }) => name !== '$$tippyReact'
+              ({name}) => name !== '$$tippyReact',
             ),
             {
               name: '$$tippyReact',
               enabled: true,
               phase: 'beforeWrite',
               requires: ['computeStyles'],
-              fn({ state }) {
+              fn({state}) {
                 const hideData = state.modifiersData?.hide;
                 // WARNING: this is a high-risk path that can cause an infinite
                 // loop. This expression _must_ evaluate to false when required
@@ -220,10 +213,14 @@ export default function TippyGenerator(tippy) {
       <>
         {children
           ? cloneElement(children, {
-              ref: (node) => {
-                mutableBox.ref = node
-                if (children && typeof children === 'object' && 'ref' in children) {
-                  mergeRef(children.ref, node)
+              ref: node => {
+                mutableBox.ref = node;
+                if (
+                  children &&
+                  typeof children === 'object' &&
+                  'ref' in children
+                ) {
+                  mergeRef(children.ref, node);
                 }
               },
             })
@@ -234,10 +231,10 @@ export default function TippyGenerator(tippy) {
               ? render(
                   toDataAttributes(attrs),
                   singletonContent,
-                  mutableBox.instance
+                  mutableBox.instance,
                 )
               : content,
-            mutableBox.container
+            mutableBox.container,
           )}
       </>
     );
